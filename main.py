@@ -1,28 +1,39 @@
 import os
 import discord
-from discord.ext import commands
-import youtube_dl
+from dotenv import load_dotenv
+
+load_dotenv()
+
+TOKEN = os.getenv('TOKEN')
+GUILD = os.getenv('GUILD')
 
 intents = discord.Intents.default()
-intents.members = True
+client = discord.Client(intents=intents)
 
-client = commands.Bot(command_prefix='!', intents=intents)
+@client.event
+async def on_ready():
+    guild = discord.utils.get(client.guilds, name=GUILD)
+    print(
+        f'{client.user} is connected to the following guild:\n'
+        f'{guild.name}(id: {guild.id})'
+    )
 
-@client.command()
-async def play(ctx, *, search: str):
-    with youtube_dl.YoutubeDL({'format': 'bestaudio'}) as ydl:
-        info = ydl.extract_info(f"ytsearch:{search}", download=False)['entries'][0]
-        url = info['url']
-    voice_channel = ctx.author.voice.channel
-    vc = await voice_channel.connect()
-    vc.play(discord.FFmpegPCMAudio(url))
+@client.event
+async def on_message(message):
+    if message.author == client.user:
+        return
 
-@client.command()
-async def stop(ctx):
-    voice_client = ctx.guild.voice_client
-    if voice_client.is_playing():
-        voice_client.stop()
-    await voice_client.disconnect()
+    if message.content.startswith('!levelup'):
+        with open('levels.txt', 'r') as f:
+            levels = f.read().splitlines()
+        user_id = str(message.author.id)
+        if user_id in levels:
+            current_level = int(levels[user_id])
+            current_level += 1
+            levels[user_id] = str(current_level)
+        else:
+            levels[user_id] = '1'
+        with open('levels.txt', 'w') as f:
+            f.write('\n'.join(levels))
 
-client.run(os.getenv('DISCORD_TOKEN'))
-
+client.run(TOKEN)
