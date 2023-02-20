@@ -1,2 +1,3 @@
-load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
+GUILD_TOKEN="<NOME-DO-DISCORD>"
+DISCORD_TOKEN="<SEU-TOKEN-AQUI>"
+
